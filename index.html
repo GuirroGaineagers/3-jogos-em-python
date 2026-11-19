@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1020">
+  <meta name="description" content="Mini Arcade: joga 2048, adivinha o número e desafia o computador a descobrir a tua idade.">
+  <title>Mini Arcade | Três jogos, três desafios</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Saltar para o conteúdo</a>
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="brand" href="{{ url_for('index') }}"><span class="brand-mark">M</span> Mini<span>Arcade</span></a>
+      <nav aria-label="Navegação principal">
+        <a href="{{ url_for('index') }}#jogos">Jogos</a>
+        <a href="{{ url_for('index') }}#classificacao">Best Scores</a>
+        <a href="{{ url_for('index') }}#sobre">Sobre</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo">
+    <section class="hero" id="inicio">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="pulse"></span> MINI ARCADE · 3 DESAFIOS</p>
+        <h1>Testa a tua mente.<br><span>Supera os teus recordes.</span></h1>
+        <p class="hero-description">Três jogos, três formas de desafiar a tua lógica. Joga, melhora a tua pontuação e entra na tabela de melhores resultados.</p>
+        <a class="button button-primary" href="#jogos">Explorar jogos <span aria-hidden="true">↓</span></a>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div>
+        <div class="floating-tile tile-a">2048</div><div class="floating-tile tile-b">?</div>
+        <div class="floating-tile tile-c">★</div><div class="art-center">PLAY<span>!</span></div>
+      </div>
+    </section>
+
+    <section class="section" id="jogos">
+      <div class="section-heading">
+        <div><p class="eyebrow">ESCOLHE O TEU DESAFIO</p><h2>Os nossos jogos</h2></div>
+        <p class="section-note">Os resultados são guardados pelo servidor deste site.</p>
+      </div>
+      <div class="game-layout">
+        <article class="game-card"><div class="game-icon icon-blue">▦</div><p class="game-tag">LÓGICA & ESTRATÉGIA</p><h3>2048</h3><p>Combina peças com o mesmo valor, soma os números e tenta chegar ao 2048.</p><a class="button button-primary" href="{{ url_for('index', game='2048') }}">Jogar 2048 <span>→</span></a></article>
+        <article class="game-card"><div class="game-icon icon-purple">◎</div><p class="game-tag">INTUIÇÃO & LÓGICA</p><h3>Adivinha o Número</h3><p>O computador escolhe um número secreto. Consegues descobri-lo antes de ficares sem tentativas?</p><a class="button button-primary" href="{{ url_for('index', game='number') }}">Jogar agora <span>→</span></a></article>
+        <article class="game-card"><div class="game-icon icon-green">?</div><p class="game-tag">PERGUNTAS & DEDUÇÃO</p><h3>Adivinha a Idade</h3><p>Responde a perguntas de sim ou não e deixa o computador tentar descobrir a tua idade.</p><a class="button button-primary" href="{{ url_for('index', game='age') }}">Desafiar o computador <span>→</span></a></article>
+      </div>
+    </section>
+
+    <section class="section play-section" aria-label="Área dos jogos">
+      <div class="section-heading">
+        <div><p class="eyebrow">ÁREA DE JOGO</p><h2>
+          {% if active_game == '2048' %}2048
+          {% elif active_game == 'number' %}Adivinha o Número
+          {% elif active_game == 'age' %}Adivinha a Idade
+          {% else %}Vamos jogar{% endif %}
+        </h2></div>
+        <a class="button button-quiet" href="{{ url_for('index') }}#jogos">← Voltar aos jogos</a>
+      </div>
+
+      {% if active_game == '2048' %}
+      <section class="game-panel">
+        <div class="panel-heading"><div><p class="eyebrow">JOGO 01</p><h2>2048</h2><p class="muted">Usa os botões para mover as peças. Cada movimento é processado em Python.</p></div>
+          <div class="stats"><div class="stat"><span>PONTUAÇÃO</span><strong>{{ game2048.score }}</strong></div><div class="stat"><span>MELHOR</span><strong>{{ scores['2048'].value if scores['2048'] else 0 }}</strong></div></div>
+        </div>
+        <div class="board-wrap"><div class="board-2048" role="grid" aria-label="Tabuleiro do jogo 2048">
+          {% for row in game2048.board %}{% for value in row %}
+            <div class="cell-2048 {% if value %}v-{{ value if value <= 2048 else 'high' }}{% else %}empty{% endif %}" role="gridcell">{{ value if value else '' }}</div>
+          {% endfor %}{% endfor %}
+        </div></div>
+        <form class="game-actions move-form" method="post">
+          <input type="hidden" name="action" value="move">
+          <div class="move-controls">
+            <button class="control-btn" name="direction" value="up" aria-label="Mover para cima">↑</button>
+            <div><button class="control-btn" name="direction" value="left" aria-label="Mover para a esquerda">←</button><button class="control-btn" name="direction" value="down" aria-label="Mover para baixo">↓</button><button class="control-btn" name="direction" value="right" aria-label="Mover para a direita">→</button></div>
+          </div>
+          <button class="button button-secondary" form="restart2048">Novo jogo</button>
+        </form>
+        <form id="restart2048" method="post"><input type="hidden" name="action" value="restart_2048"></form>
+        {% if game2048.over %}<p class="game-message error">{{ notice or 'Fim do jogo! Já não existem movimentos possíveis.' }}</p>
+        {% elif game2048.won %}<p class="game-message success">{{ notice or 'Chegaste ao 2048! Podes continuar.' }}</p>
+        {% else %}<p class="game-message">Combina os números iguais. Boa sorte!</p>{% endif %}
+      </section>
+      {% elif active_game == 'number' %}
+      <section class="game-panel">
+        <div class="panel-heading"><div><p class="eyebrow">JOGO 02</p><h2>Adivinha o Número</h2><p class="muted">Escolhe a dificuldade e tenta encontrar o número secreto.</p></div></div>
+        <form method="post" class="difficulty-row">
+          <input type="hidden" name="action" value="choose_level">
+          {% for key, level in levels.items() %}
+          <button class="difficulty {% if number_game.level == key %}active{% endif %}" name="level" value="{{ key }}"><strong>{{ level.name }}</strong><span>{{ level.min }}–{{ level.max }} · {{ level.tries }} tentativas</span></button>
+          {% endfor %}
+        </form>
+        {% set config = levels[number_game.level] %}
+        <div class="number-status"><div><span>TENTATIVAS RESTANTES</span><strong>{{ number_game.remaining }}</strong></div><div><span>INTERVALO</span><strong>{{ config.min }}–{{ config.max }}</strong></div></div>
+        <form method="post" class="guess-form">
+          <input type="hidden" name="action" value="guess_number">
+          <label for="guess">O teu palpite</label>
+          <div class="input-row"><input id="guess" name="guess" type="number" min="{{ config.min }}" max="{{ config.max }}" placeholder="Escreve um número" required {% if number_game.finished %}disabled{% endif %}><button class="button button-primary" type="submit" {% if number_game.finished %}disabled{% endif %}>Adivinhar</button></div>
+        </form>
+        <p class="game-message">{{ number_game.message }}</p>
+        <div class="game-actions"><form method="post"><input type="hidden" name="action" value="restart_number"><button class="button button-secondary">Novo número</button></form><span class="muted small">Tentativas: {{ number_game.attempts|join(', ') if number_game.attempts else 'nenhuma' }}</span></div>
+      </section>
+      {% elif active_game == 'age' %}
+      <section class="game-panel">
+        <div class="panel-heading"><div><p class="eyebrow">JOGO 03</p><h2>Adivinha a Idade</h2><p class="muted">Pensa numa idade entre 1 e 120 anos e responde sem alterar a idade que escolheste.</p></div></div>
+        {% set age = age_game %}
+        <div class="age-progress"><div class="progress-track"><span style="width: {{ [age.questions * 15, 100]|min }}%"></span></div><span>Pergunta {{ age.questions + 1 }}</span></div>
+        <div class="age-question"><div class="age-big-icon">🧠</div><p class="eyebrow">A MINHA PERGUNTA</p>
+          {% if age.guess %}<h3>A tua idade é {{ age.guess }} anos?</h3>
+          {% else %}<h3>A tua idade é maior do que {{ (age.low + age.high) // 2 }} anos?</h3>{% endif %}
+          {% if not age.finished %}
+          <form method="post" class="answer-buttons"><input type="hidden" name="action" value="age_answer"><button class="button button-primary" name="answer" value="yes">Sim, é maior</button><button class="button button-secondary" name="answer" value="no">Não, é igual ou menor</button></form>
+          {% elif age.guess and not age.confirmed %}
+          <form method="post" class="answer-buttons"><input type="hidden" name="action" value="age_confirm"><button class="button button-primary" name="answer" value="yes">Sim, acertaste!</button><button class="button button-secondary" name="answer" value="no">Não, tenta outra vez</button></form>
+          {% endif %}
+        </div>
+        <p class="game-message">{{ age.message }}</p>
+        <div class="game-actions"><form method="post"><input type="hidden" name="action" value="restart_age"><button class="button button-quiet">Recomeçar</button></form></div>
+      </section>
+      {% else %}
+      <div class="empty-state"><div class="game-icon icon-blue">🎮</div><h3>Escolhe um jogo para começar</h3><p class="muted">Seleciona um dos três desafios acima.</p></div>
+      {% endif %}
+    </section>
+
+    <section class="section leaderboard-section" id="classificacao">
+      <div class="section-heading"><div><p class="eyebrow">RECORDE PESSOAL</p><h2>Best Scores</h2><p class="muted">Os melhores resultados registados neste servidor.</p></div>
+        <form method="post" onsubmit="return confirm('Queres mesmo apagar todos os Best Scores?');"><input type="hidden" name="action" value="clear_scores"><button class="button button-quiet">Limpar recordes</button></form>
+      </div>
+      <div class="table-card"><table><thead><tr><th>Jogo</th><th>Melhor resultado</th><th>Última atualização</th></tr></thead><tbody>
+        <tr><td>2048</td><td>{{ scores['2048'].value|string + ' pontos · peça ' + scores['2048'].detail|string if scores['2048'] else '—' }}</td><td>{{ scores['2048'].date if scores['2048'] else 'Sem resultados' }}</td></tr>
+        <tr><td>Adivinha o Número</td><td>{{ scores['number'].value|string + ' pontos · ' + scores['number'].detail if scores['number'] else '—' }}</td><td>{{ scores['number'].date if scores['number'] else 'Sem resultados' }}</td></tr>
+        <tr><td>Adivinha a Idade</td><td>{{ scores['age'].value|string + ' perguntas · idade ' + scores['age'].detail if scores['age'] else '—' }}</td><td>{{ scores['age'].date if scores['age'] else 'Sem resultados' }}</td></tr>
+      </tbody></table></div>
+      <p class="privacy-note">Os melhores resultados são guardados num ficheiro local no servidor. Num site publicado, os dados dependem do alojamento e da sua persistência.</p>
+    </section>
+  </main>
+  <footer id="sobre"><a class="brand footer-brand" href="{{ url_for('index') }}">Mini<span>Arcade</span></a><p>Um pequeno espaço para grandes desafios.</p><span>Projeto desenvolvido em Python, Flask, HTML e CSS.</span></footer>
+</body>
+</html>
