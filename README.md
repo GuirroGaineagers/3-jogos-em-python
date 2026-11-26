@@ -4,7 +4,7 @@
 **Ano Letivo:** 2026/2027
 **Autor:** Guilherme Sousa
 **Turma:** 12.º A3
-**Link da Aplicação Web:** file:///Users/guisousa_niga/Downloads/mini_arcade_pyscript/index.html
+**Link da Aplicação Web:** file:///Users/guisousa_/Downloads/mini_arcade_pyscript/index.html
 
 ---
 
